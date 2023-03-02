@@ -2,13 +2,13 @@ import logging
 import os
 import shutil
 import subprocess
-import sys
 import time
-from functools import partial
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
-if os.path.basename(sys.executable) == "maya.exe":
+from script_tree import ui_utils
+
+if ui_utils.maya_check():
     from . import script_tree_dcc_maya as dcc_actions
     dcc_name = "Maya"
 else:
@@ -16,8 +16,6 @@ else:
     dcc_name = "Motionbuilder"
 
 settings_name = "script_tree_" + dcc_name.lower()
-
-from . import ui_utils
 
 
 class GlobalCache:

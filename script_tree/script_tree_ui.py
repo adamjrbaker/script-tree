@@ -7,19 +7,16 @@ import os
 import re
 import runpy
 import subprocess
-import sys
 
 from PySide2 import QtCore, QtWidgets
 
-USING_MAYA = os.path.basename(sys.executable) == "maya.exe"
+from script_tree import script_tree_utils as stu
+from script_tree import ui_utils
 
-if USING_MAYA:
-    from . import script_tree_dcc_maya as dcc_actions
+if ui_utils.maya_check():
+    from script_tree import script_tree_dcc_maya as dcc_actions
 else:
-    from . import script_tree_dcc_mobu as dcc_actions
-
-from . import script_tree_utils as stu
-from . import ui_utils
+    from script_tree import script_tree_dcc_mobu as dcc_actions
 
 lk = stu.ScriptTreeConstants
 
@@ -59,8 +56,8 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
 
 
         # MotionBuilder crashes on menuBar for some reason
-        file_menu = self.menuBar().addMenu("File") if USING_MAYA else None
-        edit_menu = self.menuBar().addMenu("Edit") if USING_MAYA else None
+        file_menu = self.menuBar().addMenu("File") if ui_utils.maya_check() else None
+        edit_menu = self.menuBar().addMenu("Edit") if ui_utils.maya_check() else None
 
         # File Menu
         self.create_action("Ctrl+N", text="New Script",

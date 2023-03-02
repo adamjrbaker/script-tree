@@ -1,10 +1,11 @@
 import logging
 import os
 
-from . import ui_utils
+from script_tree import ui_utils
 from PySide2 import QtWidgets
 
 import pymel.core as pm
+
 
 def open_script(script_path):
     """
