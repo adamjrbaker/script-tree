@@ -23,6 +23,7 @@ class GlobalCache:
 
 
 class ScriptTreeConstants:
+    """ Script tree constants"""
     window_text = "Script Tree"
     script_tree_folder_name = "ScriptTree"
     default_folder_name = "Scripts"
@@ -46,6 +47,7 @@ class ScriptTreeConstants:
 
 
 class ScriptEditorSettings(QtCore.QSettings):
+    """ Script Tree Settings """
     k_window_layout = "window/layout"
     k_folder_path = "script_tree/folder_path"
     k_double_click_action = "script_tree/double_click_action"
