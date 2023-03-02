@@ -1,3 +1,5 @@
+""" Tools to build Script tree UI """
+
 # Standard
 import functools
 import os
@@ -9,22 +11,35 @@ if sys.version_info[0] >= 3:
 # Not even going to pretend to have Maya 2016 support
 from PySide2 import QtCore
 from PySide2 import QtGui
-from PySide2 import QtUiTools
 from PySide2 import QtWidgets
 
 UI_FILES_FOLDER = os.path.dirname(__file__)
 ICON_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons")
 
-currently_using_maya = os.path.basename(sys.executable) == "maya.exe"
 
-"""
-QT UTILS BEGIN
-"""
+def maya_check():
+    """ Add a simple way to check if we are using maya or not.
+
+    Returns:
+        True if maya is the current DCC
+    """
+    try:
+        # Simply check to see if maya.cmds exists
+        import maya.cmds
+        return True
+    except ImportError:
+        # If not we know we are in another program like motion builder
+        return False
 
 
 def get_app_window():
+    """ Get top window of DCC
+
+    Returns:
+        Qt Widget
+    """
     top_window = None
-    if currently_using_maya:
+    if maya_check():
         try:
             from shiboken2 import wrapInstance
             from maya import OpenMayaUI as omui
@@ -56,6 +71,14 @@ def get_app_window():
 
 
 def delete_window(object_to_delete):
+    """ Delete window
+
+    Args:
+        object_to_delete (QWidget): Widget to delete.
+
+    Returns:
+        None
+    """
     qApp = QtWidgets.QApplication.instance()
     if not qApp:
         return
@@ -67,67 +90,20 @@ def delete_window(object_to_delete):
                 widget.close()
 
 
-def load_ui_file(ui_file_name):
-    ui_file_path = os.path.join(UI_FILES_FOLDER, ui_file_name)  # get full path
-    if not os.path.exists(ui_file_path):
-        sys.stdout.write("UI FILE NOT FOUND: {}\n".format(ui_file_path))
-        return None
+def create_qicon(icon_name):
+    """ Create QIcon.
 
-    ui_file = QtCore.QFile(ui_file_path)
-    ui_file.open(QtCore.QFile.ReadOnly)
-    loader = QtUiTools.QUiLoader()
-    window = loader.load(ui_file)
-    ui_file.close()
-    return window
+    Args:
+        icon_name (str): Icon name including file extension in the icon folder.
 
-
-def create_qicon(icon_path):
-    icon_path = icon_path.replace("\\", "/")
-    if "/" not in icon_path:
-        icon_path = os.path.join(ICON_FOLDER, icon_path + ".png")  # find in icons folder if not full path
-        if not os.path.exists(icon_path):
-            return
+    Returns:
+        QtGui.QIcon if icon exists else none.
+    """
+    icon_path = os.path.join(ICON_FOLDER, icon_name)  # find in icons folder if not full path
+    if not os.path.exists(icon_path):
+        return
 
     return QtGui.QIcon(icon_path)
-
-
-class BaseWindow(QtWidgets.QMainWindow):
-    def __init__(self, parent=get_app_window(), ui_file_name=None):
-        delete_window(self)
-        super(BaseWindow, self).__init__(parent)
-
-        self.ui = None
-        if ui_file_name:
-            self.load_ui(ui_file_name)
-
-        self.set_tool_icon("TOOL_NAME_icon")
-
-        self.show()
-
-    def set_tool_icon(self, icon_name):
-        icon = create_qicon(icon_name)
-        if icon:
-            self.setWindowIcon(icon)
-
-    def load_ui(self, ui_file_name):
-        self.ui = load_ui_file(ui_file_name)
-        self.setGeometry(self.ui.rect())
-        self.setWindowTitle(self.ui.property("windowTitle"))
-        self.setCentralWidget(self.ui)
-
-        parent_window = self.parent()
-        if not parent_window:
-            return
-
-        dcc_window_center = parent_window.mapToGlobal(parent_window.rect().center())
-        window_offset_x = dcc_window_center.x() - self.geometry().width() / 2
-        window_offset_y = dcc_window_center.y() - self.geometry().height() / 2
-        self.move(window_offset_x, window_offset_y)  # move to dcc screen center
-
-
-"""
-QT UTILS END
-"""
 
 
 class WindowHandler(object):
@@ -136,7 +112,8 @@ class WindowHandler(object):
 
 wh = WindowHandler()
 
-if currently_using_maya:
+# Setup dockable widget for Maya
+if maya_check():
 
     from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
     from maya import OpenMayaUI as omui
@@ -147,12 +124,25 @@ if currently_using_maya:
         docking_object_name = "DockableWidget"
 
         def __init__(self, parent=None):
+            """ Dockable widget for Maya
+
+            Args:
+                parent (QWindow | None): Apps parent widget
+            """
             super(DockableWidget, self).__init__(parent=parent)
             self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
             self.setObjectName(self.docking_object_name)  # this one is important
             self.setWindowTitle('Custom Maya Mixin Workspace Control')
 
         def apply_ui_widget(self, widget):
+            """ Apply Ui to widget.
+
+            Args:
+                widget (QWidget): Widget to set.
+
+            Returns:
+                None
+            """
             self.setCentralWidget(widget)
 
 
@@ -160,6 +150,17 @@ if currently_using_maya:
                                restore=False, restore_script="create_dockable_widget(restore=True)",
                                force_refresh=False
                                ):
+        """ Create dockable widget
+
+        Args:
+            widget_class (Class):  Widget Class
+            restore (Bool | False): If widget should be restored.
+            restore_script (str | create_dockable_widget(restore=True)): Restore script
+            force_refresh (Bool | False): If refresh should be forced
+
+        Returns:
+            Class of widget instance
+        """
         if force_refresh:
             if widget_class.docking_object_name in wh.__dict__.keys():
                 wh.__dict__.pop(widget_class.docking_object_name)
@@ -192,11 +193,16 @@ if currently_using_maya:
         return widget_instance
 
 else:
-    # MotionBuilder
+    # Create dockable widget for MotionBuilder
     class DockableWidget(QtWidgets.QDockWidget):
         docking_object_name = "DockableWidget"
 
         def __init__(self, parent=get_app_window()):
+            """ Dockable widget for Motion Builder
+
+            Args:
+                parent (QWindow): Apps parent widget
+            """
             delete_window(self)
             super(DockableWidget, self).__init__(parent=parent)
             # self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
@@ -205,6 +211,14 @@ else:
             self.setFloating(True)
 
         def apply_ui_widget(self, widget):
+            """ Apply Ui to widget.
+
+            Args:
+                widget (QWidget): Widget to set.
+
+            Returns:
+                None
+            """
             self.setWidget(widget)
 
 
@@ -212,12 +226,33 @@ else:
                                restore=False, restore_script="create_dockable_widget(restore=True)",
                                force_refresh=False
                                ):
+        """ Create dockable widget
+
+        Args:
+            widget_class (Class):  Widget Class
+            restore (Bool | False): If widget should be restored.
+            restore_script (str | create_dockable_widget(restore=True)): Restore script
+            force_refresh (Bool | False): If refresh should be forced
+
+        Returns:
+            Class of widget instance
+        """
         widget_instance = widget_class()
         widget_instance.show()
         return widget_instance
 
 
 def build_menu_from_action_list(actions, menu=None, is_sub_menu=False):
+    """ Build menu action list.
+
+    Args:
+        actions (list): list of strings of actions.
+        menu (QMenu | None): Qmenu to add object to.
+        is_sub_menu (Bool | False): if menu is a sub menu.
+
+    Returns:
+        QMenu with actions.
+    """
     if not menu:
         menu = QtWidgets.QMenu()
 
@@ -277,5 +312,16 @@ def build_menu_from_action_list(actions, menu=None, is_sub_menu=False):
 
 
 def set_settings_value(settings_obj, key, value, post_set_command):
+    """ Set settings value.
+
+    Args:
+        settings_obj (QtCore.QSettings): QSetting.
+        key (str): Setting name.
+        value (list): list of actions.
+        post_set_command (function): on trigger command.
+
+    Returns:
+        None
+    """
     settings_obj.setValue(key, value)
     post_set_command()
