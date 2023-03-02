@@ -60,20 +60,30 @@ class ScriptEditorSettings(QtCore.QSettings):
 
 
 def open_path_in_explorer(file_path):
+    """ Open file in file manager.
+
+    Args:
+        file_path (str): Path ot launch from.
+
+    Returns:
+        None
+    """
     if os.path.isdir(file_path):
         file_path += "/"
 
     file_path = file_path.replace("/", "\\")  # wow, I don't think I've done this intentionally before
 
+    # Try and launch like we are in windows and cycle all OS.
     try:
-        if os.path.isdir(file_path):
-            os.startfile(file_path)  # this felt faster than subprocess on my machine
-        else:
-            subprocess.Popen(r'explorer /select, "{}"'.format(file_path))
-            # log.warning("Attempt to open path in explorer failed")
-    except Exception as e:
-        print(e)
-        # log.warning("Attempt to open path in explorer failed")
+        try:
+            subprocess.Popen(r'open /select, "{}"'.format(file_path))
+
+        except OSError:
+            subprocess.Popen(['xdg-open', file_path])
+
+    except OSError:
+        subprocess.Popen(['open', file_path])
+
 
 '''
 def check_script_tree_in_focus():
