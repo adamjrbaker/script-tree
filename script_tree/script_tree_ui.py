@@ -25,6 +25,12 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
     docking_object_name = "ScriptTreeWindow"
 
     def __init__(self, *args, **kwargs):
+        """ Script Tree window.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(ScriptTreeWindow, self).__init__(*args, **kwargs)
         self.setWindowTitle(lk.window_text)
 
@@ -53,7 +59,6 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
             {"Save all temporary tabs": dcc_actions.save_script_editor},
             {"Backup Script Tree": self.action_backup_tree}
         ]
-
 
         # MotionBuilder crashes on menuBar for some reason
         file_menu = self.menuBar().addMenu("File") if ui_utils.maya_check() else None
@@ -102,6 +107,17 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
         dcc_actions.eval_deferred(self.add_actions_to_script_editor)
 
     def create_action(self, shortcut, command=None, text="", menu=None):
+        """ Create right click button action.
+
+        Args:
+            shortcut (str): shortcut to trigger command.
+            command (function | None): Function to run on trigger.
+            text (str | ""): Test name of command.
+            menu (Qmenu | None): Name of menu to add action too.
+
+        Returns:
+
+        """
         shortcut_action = QtWidgets.QAction(self)
         shortcut_action.setShortcut(shortcut)
         shortcut_action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
@@ -114,6 +130,11 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
             menu.addAction(shortcut_action)
 
     def add_actions_to_script_editor(self):
+        """ Add actions to script editor widget.
+
+        Returns:
+            None
+        """
         dcc_script_editor_widget = dcc_actions.get_script_editor_widget() # type: QtWidgets.QTabWidget
         if not dcc_script_editor_widget:
             return
@@ -121,6 +142,11 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
             dcc_script_editor_widget.addAction(action)
 
     def setup_connections(self):
+        """ Setup connections for tree items.
+
+        Returns:
+            None
+        """
         # buttons and widget signals
         self.ui.set_folder_btn.clicked.connect(self.action_set_folder)
         self.ui.search_bar.textChanged.connect(self._user_input_filter)
@@ -132,15 +158,28 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
         self.action_setup_double_click_connections()
 
     def context_menu(self):
+        """ Build context menu.
+
+        Returns:
+            QMenu with items added.
+        """
         return ui_utils.build_menu_from_action_list(self.context_menu_actions)
 
-    ################################################################################
     # signaled from ui
-
     def _user_input_filter(self):
+        """ User input filer.
+
+        Returns:
+            None
+        """
         self.filter_timer.start(lk.user_input_filter_delay)
 
     def filter_results(self):
+        """ get results of filter.
+
+        Returns:
+            None
+        """
 
         filter_text = re.sub(r'[^\x00-\x7F]+', '', self.ui.search_bar.text())  # strip unicode characters until py3
 
@@ -157,6 +196,11 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
             self.ui.model.setNameFilters(filters)
 
     def open_script_search_dialog(self):
+        """ Open script editor search dialog.
+
+        Returns:
+            None
+        """
         win = SearchDialog(self,
                            root_folder=self.ui.get_script_folder(),
                            search_string=dcc_actions.get_selected_script_text()
@@ -164,13 +208,25 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
         win.show()
         win.resize(800, 300)
 
-    ################################################################################
     # Actions
     @staticmethod
     def action_new_tab():
+        """ Build new tab.
+
+        Returns:
+            None
+        """
         dcc_actions.create_new_tab(default_script_content=lk.default_script_content)
 
     def action_open_script(self, prompt_path=False):
+        """ Action to open script in script editor.
+
+        Args:
+            prompt_path (bool | False):  If prompt to open should come up.
+
+        Returns:
+            None
+        """
         if prompt_path is True:
             script_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open Script",
                                                                    dir=self.ui.get_script_folder(),
@@ -188,6 +244,14 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
         logging.info("Opened: {}".format(script_path))
 
     def action_save_tab(self, prompt_path=False):
+        """ Action to save script in editor.
+
+        Args:
+            prompt_path (bool | False):  If prompt to open should come up.
+
+        Returns:
+            None
+        """
 
         script_path = dcc_actions.get_selected_script_path()
 
@@ -202,24 +266,49 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
         dcc_actions.save_selected_tab(script_path)
 
     def action_close_tab(self):
+        """ Close tab of selected script.
+
+        Returns:
+            None
+        """
         self.recently_closed_scripts.append(dcc_actions.get_selected_script_path())
         dcc_actions.delete_selected_tab()
 
     def action_open_path_in_explorer(self):
+        """ Open selected script in file browser.
+
+        Returns:
+            None
+        """
         stu.open_path_in_explorer(self.ui.get_selected_path())
         
     def action_copy_path_to_clipboard(self):
+        """ Copy script path to clipboard.
+
+        Returns:
+            None
+        """
         clipboard = QtWidgets.QApplication.clipboard()
         path = self.ui.get_selected_path()
         clipboard.setText(path)
 
     def action_open_backup_folder(self):
+        """ Open up script backup folder.
+
+        Returns:
+            None
+        """
         backup_folder = stu.get_backup_folder_for_script(self.ui.get_selected_path())
         if not os.path.exists(backup_folder):
             backup_folder = lk.script_backup_folder
         stu.open_path_in_explorer(backup_folder)
 
     def action_backup_tree(self):
+        """ Back up script tree
+
+        Returns:
+            None
+        """
         result = QtWidgets.QMessageBox.question(self, "Backup ScriptTree?",
                                                 "This will make a local copy of the entire script tree folder",
                                                 QtWidgets.QMessageBox.Ok,
@@ -229,6 +318,14 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
             stu.backup_tree(self.ui.get_script_folder())
 
     def action_set_folder(self, folder_path=None):
+        """ Set folder path.
+
+        Args:
+            folder_path (str | None): Path to script folder.
+
+        Returns:
+            None
+        """
         if not folder_path:
             folder_path = QtWidgets.QFileDialog.getExistingDirectory(self,
                                                                      "Choose Script Folder",
@@ -244,6 +341,11 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
         self.settings.setValue(stu.ScriptEditorSettings.k_folder_path, folder_path)
 
     def action_reopen_recently_closed(self):
+        """ Reopen recently closed file.
+
+        Returns:
+            None
+        """
         if not len(self.recently_closed_scripts):
             return
         recent_script_path = self.recently_closed_scripts.pop(-1)
@@ -251,6 +353,11 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
             dcc_actions.open_script(recent_script_path)
 
     def action_run_script(self):
+        """ Run script.
+
+        Returns:
+            None
+        """
         file_path = self.ui.get_selected_path()
         if os.path.isdir(file_path):
             return
@@ -270,8 +377,10 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
         dcc_actions.add_to_repeat_commands(exec_command)
 
     def action_setup_double_click_connections(self):
-        """
-        Switch between opening or running the script on double click.
+        """ Switch between opening or running the script on double click.
+
+        Returns:
+            None
         """
 
         try:
@@ -289,6 +398,12 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
 
 class ScriptTreeWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
+        """ Script tree widget.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(ScriptTreeWidget, self).__init__(*args, **kwargs)
 
         self.folder_path = QtWidgets.QLineEdit()
@@ -334,14 +449,32 @@ class ScriptTreeWidget(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
     def get_selected_path(self):
+        """ Get path of selected item
+
+        Returns:
+            str of path of selected item.
+        """
         index = self.tree_view.currentIndex()
         file_path = self.model.filePath(index)
         return file_path.replace("\\", "/")
 
     def get_script_folder(self):
+        """ Get script folder path.
+
+        Returns:
+            str of script folder.
+        """
         return self.folder_path.text()
 
     def set_script_folder(self, folder_path):
+        """ Set script tree folder.
+
+        Args:
+            folder_path (str): Path to script folder to set.
+
+        Returns:
+            None
+        """
         self.model.setRootPath(folder_path)
         self.tree_view.setRootIndex(self.model.index(folder_path))
         self.folder_path.setText(folder_path)
@@ -349,6 +482,13 @@ class ScriptTreeWidget(QtWidgets.QWidget):
 
 class SearchDialog(QtWidgets.QDialog):
     def __init__(self, parent=ui_utils.get_app_window(), root_folder="", search_string=""):
+        """
+
+        Args:
+            parent (Qt Widget | ui_utils.get_app_window()):  Parent widget.
+            root_folder (str | ""): foot script folder
+            search_string (str | ""): Search value.
+        """
         ui_utils.delete_window(self)
         super(SearchDialog, self).__init__(parent)
 
@@ -375,8 +515,13 @@ class SearchDialog(QtWidgets.QDialog):
         self.setLayout(main_layout)
         self.setWindowTitle("Search ScriptTree")
 
+# TODO: move away from print and go into log.
     def start_search(self):
-        """ Search for string using commandline findstr """
+        """ Search for string using commandline findstr
+
+        Returns:
+            None
+        """
         root_folder = self.folder_LE.text()
         str_to_find = self.search_text_LE.text()
         print("Searching {} for '{}'".format(root_folder, str_to_find))
@@ -393,6 +538,15 @@ class SearchDialog(QtWidgets.QDialog):
 
 
 def main(restore=False, force_refresh=False):
+    """ Launch widget creation.
+
+    Args:
+        restore (bool | False): if widget should be restored.
+        force_refresh (bool | False): If widget should be forced refreshed.
+
+    Returns:
+        QtWidgets.QDockWidget
+    """
     restore_script = "import script_tree; script_tree.main(restore=True)"
 
     return ui_utils.create_dockable_widget(ScriptTreeWindow,
