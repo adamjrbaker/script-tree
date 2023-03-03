@@ -87,6 +87,92 @@ def open_path_in_explorer(file_path):
         subprocess.Popen(['open', file_path])
 
 
+def get_backup_folder_for_script(script_path):
+    """ Get backup script folder for script.
+
+    Args:
+        script_path (str): Script path.
+
+    Returns:
+        str to backup script directory.
+    """
+    file_name, file_extension = os.path.splitext(os.path.basename(script_path))
+    backup_dir = os.path.join(ScriptTreeConstants.script_backup_folder, file_name)
+    return backup_dir
+
+
+def backup_script(script_path):
+    """ Backup script
+
+    Args:
+        script_path (str): Path of script.
+
+    Returns:
+        None
+    """
+    if not os.path.exists(script_path):
+        return
+
+    try:
+        file_name, file_extension = os.path.splitext(os.path.basename(script_path))
+
+        unique_time = str(int(time.time()))
+        backup_file_name = file_name + "_BACKUP_{}".format(unique_time) + file_extension
+
+        backup_file_path = os.path.join(get_backup_folder_for_script(script_path), backup_file_name)
+
+        if not os.path.exists(os.path.dirname(backup_file_path)):
+            os.makedirs(os.path.dirname(backup_file_path))
+
+        shutil.copy2(script_path, backup_file_path)
+
+    except Exception as e:
+        logging.error(e)
+
+
+def backup_tree(script_folder):
+    """ Backup script tree by copying folder to backup location.
+
+    Args:
+        script_folder (str): Path of script folder
+
+    Returns:
+        None
+    """
+    unique_time = str(int(time.time()))
+    backup_directory_name = "ScriptTree_BACKUP_{}".format(unique_time)
+    backup_directory_path = os.path.join(ScriptTreeConstants.tree_backup_folder, backup_directory_name)
+
+    copy_directory(script_folder, backup_directory_path)
+
+    logging.info("ScriptTree Network Folder Saved: {}".format(backup_directory_path))
+
+
+def copy_directory(src, dst, symlinks=False, ignore=None):
+    """ Copy directory
+
+    Args:
+        src (str): Path to script.
+        dst (str): Path of script directory
+        symlinks (bool | False):
+        ignore (list | None): List of files to ignore.
+
+    Returns:
+        None
+    """
+    if not os.path.exists(dst):
+        os.makedirs(dst)
+
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
+
+
 '''
 def check_script_tree_in_focus():
     script_tree_is_in_focus = False
@@ -115,7 +201,7 @@ def create_script_tree_hotkey(shortcut_seq=None, command=None, *args, **kwargs):
     """
     Create shortcut that only triggers when Script Tree is focused
     This exists because QtCore.Qt.WindowShortcut context also triggers when ScriptTree is docked to the main window
-    
+
     Doesn't really work because it overwrites other QT Shortcuts, but hey, I tried.
 
     Credit to: https://bindpose.com/custom-global-hotkey-maya/ for the idea
@@ -173,53 +259,3 @@ def non_specific_hotkey(shortcut, shortcut_seq):
 
     dcc_actions.eval_deferred(partial(shortcut.setEnabled, 1))  # re-active the shortcut after evaluation has finished
 '''
-
-def get_backup_folder_for_script(script_path):
-    file_name, file_extension = os.path.splitext(os.path.basename(script_path))
-    backup_dir = os.path.join(ScriptTreeConstants.script_backup_folder, file_name)
-    return backup_dir
-
-
-def backup_script(script_path):
-    if not os.path.exists(script_path):
-        return
-
-    try:
-        file_name, file_extension = os.path.splitext(os.path.basename(script_path))
-
-        unique_time = str(int(time.time()))
-        backup_file_name = file_name + "_BACKUP_{}".format(unique_time) + file_extension
-
-        backup_file_path = os.path.join(get_backup_folder_for_script(script_path), backup_file_name)
-
-        if not os.path.exists(os.path.dirname(backup_file_path)):
-            os.makedirs(os.path.dirname(backup_file_path))
-
-        shutil.copy2(script_path, backup_file_path)
-
-    except Exception as e:
-        logging.error(e)
-
-
-def backup_tree(script_folder):
-    unique_time = str(int(time.time()))
-    backup_directory_name = "ScriptTree_BACKUP_{}".format(unique_time)
-    backup_directory_path = os.path.join(ScriptTreeConstants.tree_backup_folder, backup_directory_name)
-
-    copy_directory(script_folder, backup_directory_path)
-
-    logging.info("ScriptTree Network Folder Saved: {}".format(backup_directory_path))
-
-
-def copy_directory(src, dst, symlinks=False, ignore=None):
-    if not os.path.exists(dst):
-        os.makedirs(dst)
-
-    for item in os.listdir(src):
-        s = os.path.join(src, item)
-        d = os.path.join(dst, item)
-
-        if os.path.isdir(s):
-            shutil.copytree(s, d, symlinks, ignore)
-        else:
-            shutil.copy2(s, d)
