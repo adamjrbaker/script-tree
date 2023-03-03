@@ -1,11 +1,12 @@
 """ Maya script tree functions"""
-import logging
 import os
 
 from script_tree import ui_utils
 from PySide2 import QtWidgets
 
 import pymel.core as pm
+
+from script_tree.logger import log
 
 
 def open_script(script_path):
@@ -104,7 +105,7 @@ def save_selected_tab(script_path=None):
     pm.mel.eval('renameCurrentExecuterTab("{}", 0);'.format(script_path))
     hookup_tab_signals(cmd_exec)
 
-    logging.info("Saved: {}".format(script_path))
+    log.info("Saved: {}".format(script_path))
 
 
 def reload_selected_tab():
@@ -187,7 +188,7 @@ def save_script_editor():
         None
     """
     pm.mel.syncExecuterBackupFiles()
-    logging.info("Script Editor Saved")
+    log.info("Script Editor Saved")
 
 
 def get_selected_cmd_executer():

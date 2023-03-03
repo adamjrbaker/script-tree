@@ -13,6 +13,8 @@ from PySide2 import QtCore
 from PySide2 import QtGui
 from PySide2 import QtWidgets
 
+from script_tree.logger import log
+
 UI_FILES_FOLDER = os.path.dirname(__file__)
 ICON_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons")
 
@@ -63,7 +65,7 @@ def get_app_window():
                 break
 
         if mb_window is None:
-            print("No motionbuilder window instance found")
+            log.warning("No motionbuilder window instance found")
         else:
             return mb_window
 

@@ -1,4 +1,5 @@
-import logging
+""" Script Tree utilities"""
+
 import os
 import shutil
 import subprocess
@@ -7,6 +8,7 @@ import time
 from PySide2 import QtCore, QtWidgets, QtGui
 
 from script_tree import ui_utils
+from script_tree.logger import log
 
 if ui_utils.maya_check():
     from . import script_tree_dcc_maya as dcc_actions
@@ -127,7 +129,7 @@ def backup_script(script_path):
         shutil.copy2(script_path, backup_file_path)
 
     except Exception as e:
-        logging.error(e)
+        log.error(e)
 
 
 def backup_tree(script_folder):
@@ -145,7 +147,7 @@ def backup_tree(script_folder):
 
     copy_directory(script_folder, backup_directory_path)
 
-    logging.info("ScriptTree Network Folder Saved: {}".format(backup_directory_path))
+    log.info("ScriptTree Network Folder Saved: {}".format(backup_directory_path))
 
 
 def copy_directory(src, dst, symlinks=False, ignore=None):

@@ -1,8 +1,8 @@
+""" Script Editor UI"""
 __author__ = "Richard Brenick - RichardBrenick@gmail.com"
 __created__ = "2020-09-26"
 __modified__ = "2022-03-01"
 
-import logging
 import os
 import re
 import runpy
@@ -12,6 +12,7 @@ from PySide2 import QtCore, QtWidgets
 
 from script_tree import script_tree_utils as stu
 from script_tree import ui_utils
+from script_tree.logger import log
 
 if ui_utils.maya_check():
     from script_tree import script_tree_dcc_maya as dcc_actions
@@ -241,7 +242,7 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
             return
 
         dcc_actions.open_script(script_path)
-        logging.info("Opened: {}".format(script_path))
+        log.info("Opened: {}".format(script_path))
 
     def action_save_tab(self, prompt_path=False):
         """ Action to save script in editor.
@@ -368,12 +369,12 @@ class ScriptTreeWindow(ui_utils.DockableWidget, QtWidgets.QMainWindow):
             runpy.run_path(file_path, init_globals=globals(), run_name="__main__")
 
         elif file_path.endswith(".mel"):
-            logging.warning("TODO: add Mel support")
+            log.warning("TODO: add Mel support")
             exec_command = ""
         else:
             exec_command = ""
 
-        logging.info("Executed: {}".format(file_path))
+        log.info("Executed: {}".format(file_path))
         dcc_actions.add_to_repeat_commands(exec_command)
 
     def action_setup_double_click_connections(self):
@@ -515,7 +516,6 @@ class SearchDialog(QtWidgets.QDialog):
         self.setLayout(main_layout)
         self.setWindowTitle("Search ScriptTree")
 
-# TODO: move away from print and go into log.
     def start_search(self):
         """ Search for string using commandline findstr
 
@@ -524,17 +524,15 @@ class SearchDialog(QtWidgets.QDialog):
         """
         root_folder = self.folder_LE.text()
         str_to_find = self.search_text_LE.text()
-        print("Searching {} for '{}'".format(root_folder, str_to_find))
+        log.info("Searching {} for '{}'".format(root_folder, str_to_find))
 
         proc = subprocess.Popen("findstr /s /n " + str_to_find + " *.py *.mel",
                                 cwd=root_folder,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         std_out_data, std_err_data = proc.communicate()
-        print("#" * 50)
-        print("Search Results:\n")
-        print(std_out_data)
-        print("#" * 50)
+        log.info("Search Results:\n")
+        log.info(std_out_data)
 
 
 def main(restore=False, force_refresh=False):
