@@ -1,4 +1,20 @@
 def main(*args, **kwargs):
+    try:
+        import Qt
+    except ImportError:
+        from PySide2 import QtWidgets, QtCore
+
+        box = QtWidgets.QMessageBox(
+            QtWidgets.QMessageBox.Icon.Warning,
+            'Script Editor Load',
+            'Missing QT.py Package\nScript Tree is built on QT.py and unable to load wihtout it.',
+            QtWidgets.QMessageBox.StandardButton.Cancel,
+            None,
+            QtCore.Qt.Dialog | QtCore.Qt.MSWindowsFixedSizeDialogHint | QtCore.Qt.WindowContextHelpButtonHint
+        )
+        box.setWhatsThis('Script Tree install error.')
+        box.exec_()
+
     from . import script_tree_ui
     return script_tree_ui.main(*args, **kwargs)
 

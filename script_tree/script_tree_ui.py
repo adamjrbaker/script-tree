@@ -8,7 +8,7 @@ import re
 import runpy
 import subprocess
 
-from PySide2 import QtCore, QtWidgets
+from Qt import QtCore, QtWidgets
 
 from script_tree import script_tree_utils as stu
 from script_tree import ui_utils

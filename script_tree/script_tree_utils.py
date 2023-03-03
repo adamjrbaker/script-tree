@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import time
 
-from PySide2 import QtCore, QtWidgets, QtGui
+from Qt import QtCore
 
 from script_tree import ui_utils
 from script_tree.logger import log

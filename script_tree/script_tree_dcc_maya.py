@@ -1,12 +1,13 @@
 """ Maya script tree functions"""
+
 import os
 
-from script_tree import ui_utils
-from PySide2 import QtWidgets
+from Qt import QtWidgets
 
 import pymel.core as pm
 
 from script_tree.logger import log
+from script_tree import ui_utils
 
 
 def open_script(script_path):

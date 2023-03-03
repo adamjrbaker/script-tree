@@ -8,10 +8,7 @@ import sys
 if sys.version_info[0] >= 3:
     long = int
 
-# Not even going to pretend to have Maya 2016 support
-from PySide2 import QtCore
-from PySide2 import QtGui
-from PySide2 import QtWidgets
+from Qt import QtCore, QtGui, QtWidgets
 
 from script_tree.logger import log
 
