@@ -19,25 +19,21 @@ The poor mans <a href="http://zurbrigg.com/charcoal-editor-2">Charcoal Editor.</
 - Show file in explorer
 - Backup scripts
 
----
 
 # Setup
 ## Install
 If you work in a studio / with multiple people, I would recommend pointing the folder at a network path 
 so it's easier to access scripts from any machine.
 
-
 Maya scripts install
 ```
 Extract script file into maya script path.
 ```
-
 Python Install
 ```Python
 import sys
 sys.path.append(r"UNZIP_FOLDER\script-tree")
 ```
-
 .Bat install
 ```
 Run installer.bat (will create a .mod file in your maya/modules folder)
