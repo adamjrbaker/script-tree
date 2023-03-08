@@ -42,7 +42,7 @@ Restart Maya
 
 ## Dependents
 
-###[QT.py](https://github.com/mottosso/Qt.py)
+[QT.py](https://github.com/mottosso/Qt.py)
 
 ## Run 
 To Run script tree run the following code inside Maya or MotionBuilder
