@@ -1,14 +1,16 @@
-import logging
+""" Script Tree utilities"""
+
 import os
 import shutil
 import subprocess
-import sys
 import time
-from functools import partial
 
-from PySide2 import QtCore, QtWidgets, QtGui
+from Qt import QtCore
 
-if os.path.basename(sys.executable) == "maya.exe":
+from script_tree import ui_utils
+from script_tree.logger import log
+
+if ui_utils.maya_check():
     from . import script_tree_dcc_maya as dcc_actions
     dcc_name = "Maya"
 else:
@@ -17,14 +19,13 @@ else:
 
 settings_name = "script_tree_" + dcc_name.lower()
 
-from . import ui_utils
-
 
 class GlobalCache:
     shortcuts = []
 
 
 class ScriptTreeConstants:
+    """ Script tree constants"""
     window_text = "Script Tree"
     script_tree_folder_name = "ScriptTree"
     default_folder_name = "Scripts"
@@ -48,6 +49,7 @@ class ScriptTreeConstants:
 
 
 class ScriptEditorSettings(QtCore.QSettings):
+    """ Script Tree Settings """
     k_window_layout = "window/layout"
     k_folder_path = "script_tree/folder_path"
     k_double_click_action = "script_tree/double_click_action"
@@ -62,20 +64,116 @@ class ScriptEditorSettings(QtCore.QSettings):
 
 
 def open_path_in_explorer(file_path):
+    """ Open file in file manager.
+
+    Args:
+        file_path (str): Path ot launch from.
+
+    Returns:
+        None
+    """
     if os.path.isdir(file_path):
         file_path += "/"
 
     file_path = file_path.replace("/", "\\")  # wow, I don't think I've done this intentionally before
 
+    # Try and launch like we are in windows and cycle all OS.
     try:
-        if os.path.isdir(file_path):
-            os.startfile(file_path)  # this felt faster than subprocess on my machine
-        else:
-            subprocess.Popen(r'explorer /select, "{}"'.format(file_path))
-            # log.warning("Attempt to open path in explorer failed")
+        try:
+            subprocess.Popen(r'open /select, "{}"'.format(file_path))
+
+        except OSError:
+            subprocess.Popen(['xdg-open', file_path])
+
+    except OSError:
+        subprocess.Popen(['open', file_path])
+
+
+def get_backup_folder_for_script(script_path):
+    """ Get backup script folder for script.
+
+    Args:
+        script_path (str): Script path.
+
+    Returns:
+        str to backup script directory.
+    """
+    file_name, file_extension = os.path.splitext(os.path.basename(script_path))
+    backup_dir = os.path.join(ScriptTreeConstants.script_backup_folder, file_name)
+    return backup_dir
+
+
+def backup_script(script_path):
+    """ Backup script
+
+    Args:
+        script_path (str): Path of script.
+
+    Returns:
+        None
+    """
+    if not os.path.exists(script_path):
+        return
+
+    try:
+        file_name, file_extension = os.path.splitext(os.path.basename(script_path))
+
+        unique_time = str(int(time.time()))
+        backup_file_name = file_name + "_BACKUP_{}".format(unique_time) + file_extension
+
+        backup_file_path = os.path.join(get_backup_folder_for_script(script_path), backup_file_name)
+
+        if not os.path.exists(os.path.dirname(backup_file_path)):
+            os.makedirs(os.path.dirname(backup_file_path))
+
+        shutil.copy2(script_path, backup_file_path)
+
     except Exception as e:
-        print(e)
-        # log.warning("Attempt to open path in explorer failed")
+        log.error(e)
+
+
+def backup_tree(script_folder):
+    """ Backup script tree by copying folder to backup location.
+
+    Args:
+        script_folder (str): Path of script folder
+
+    Returns:
+        None
+    """
+    unique_time = str(int(time.time()))
+    backup_directory_name = "ScriptTree_BACKUP_{}".format(unique_time)
+    backup_directory_path = os.path.join(ScriptTreeConstants.tree_backup_folder, backup_directory_name)
+
+    copy_directory(script_folder, backup_directory_path)
+
+    log.info("ScriptTree Network Folder Saved: {}".format(backup_directory_path))
+
+
+def copy_directory(src, dst, symlinks=False, ignore=None):
+    """ Copy directory
+
+    Args:
+        src (str): Path to script.
+        dst (str): Path of script directory
+        symlinks (bool | False):
+        ignore (list | None): List of files to ignore.
+
+    Returns:
+        None
+    """
+    if not os.path.exists(dst):
+        os.makedirs(dst)
+
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
+
 
 '''
 def check_script_tree_in_focus():
@@ -105,7 +203,7 @@ def create_script_tree_hotkey(shortcut_seq=None, command=None, *args, **kwargs):
     """
     Create shortcut that only triggers when Script Tree is focused
     This exists because QtCore.Qt.WindowShortcut context also triggers when ScriptTree is docked to the main window
-    
+
     Doesn't really work because it overwrites other QT Shortcuts, but hey, I tried.
 
     Credit to: https://bindpose.com/custom-global-hotkey-maya/ for the idea
@@ -163,53 +261,3 @@ def non_specific_hotkey(shortcut, shortcut_seq):
 
     dcc_actions.eval_deferred(partial(shortcut.setEnabled, 1))  # re-active the shortcut after evaluation has finished
 '''
-
-def get_backup_folder_for_script(script_path):
-    file_name, file_extension = os.path.splitext(os.path.basename(script_path))
-    backup_dir = os.path.join(ScriptTreeConstants.script_backup_folder, file_name)
-    return backup_dir
-
-
-def backup_script(script_path):
-    if not os.path.exists(script_path):
-        return
-
-    try:
-        file_name, file_extension = os.path.splitext(os.path.basename(script_path))
-
-        unique_time = str(int(time.time()))
-        backup_file_name = file_name + "_BACKUP_{}".format(unique_time) + file_extension
-
-        backup_file_path = os.path.join(get_backup_folder_for_script(script_path), backup_file_name)
-
-        if not os.path.exists(os.path.dirname(backup_file_path)):
-            os.makedirs(os.path.dirname(backup_file_path))
-
-        shutil.copy2(script_path, backup_file_path)
-
-    except Exception as e:
-        logging.error(e)
-
-
-def backup_tree(script_folder):
-    unique_time = str(int(time.time()))
-    backup_directory_name = "ScriptTree_BACKUP_{}".format(unique_time)
-    backup_directory_path = os.path.join(ScriptTreeConstants.tree_backup_folder, backup_directory_name)
-
-    copy_directory(script_folder, backup_directory_path)
-
-    logging.info("ScriptTree Network Folder Saved: {}".format(backup_directory_path))
-
-
-def copy_directory(src, dst, symlinks=False, ignore=None):
-    if not os.path.exists(dst):
-        os.makedirs(dst)
-
-    for item in os.listdir(src):
-        s = os.path.join(src, item)
-        d = os.path.join(dst, item)
-
-        if os.path.isdir(s):
-            shutil.copytree(s, d, symlinks, ignore)
-        else:
-            shutil.copy2(s, d)

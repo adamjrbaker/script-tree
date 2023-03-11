@@ -1,7 +1,7 @@
-import logging
-import os
+""" Script tree MotionBuilder setup."""
 
 # TODO: make this module
+
 
 def open_script(script_path):
     """
@@ -23,6 +23,7 @@ def create_new_tab(default_script_content=""):
     """
     pass
 
+
 def get_selected_script_path():
     cmd_exec = get_selected_cmd_executer()
     return
@@ -34,45 +35,58 @@ def save_selected_tab(script_path=None):
 
     pass
 
+
 def reload_selected_tab():
     cmd_exec = get_selected_cmd_executer()
     pass
 
+
 def delete_selected_tab():
     pass
+
 
 def insert_pm_selected():
     cmd_exec = get_selected_cmd_executer()
     pass
 
+
 def toggle_comment_selected_lines():
     cmd_exec = get_selected_cmd_executer()
     pass
+
 
 def get_selected_script_text():
     cmd_exec = get_selected_cmd_executer()
     pass
 
+
 def clear_script_output():
     pass
+
 
 def save_script_editor():
     pass
 
+
 def get_selected_cmd_executer():
     pass
+
 
 def hookup_tab_signals(cmd_exec):
     pass
 
+
 def open_search_dialog():
     pass
+
 
 def eval_deferred(*args, **kwargs):
     pass
 
+
 def add_to_repeat_commands(exec_command):
     pass
+
 
 def get_script_editor_widget():
     return
